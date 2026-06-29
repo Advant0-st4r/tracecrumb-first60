@@ -1,0 +1,20 @@
+{
+  "mvp": "TraceCrumb First-60",
+  "priority": "1",
+  "pipeline": "Wrong-first-call loss prevention",
+  "audience": "SREs, DevOps engineers, platform engineers, incident commanders, on-call leads",
+  "channel": "",
+  "community": "",
+  "pain_quote": "",
+  "drop_url": "",
+  "artifact_used": false,
+  "reply_received": false,
+  "tried_on_own_case": false,
+  "reused": false,
+  "asked_for_integration": false,
+  "asked_for_team_use": false,
+  "shared_with_others": false,
+  "price_or_pilot_question": false,
+  "objection": "",
+  "next_iteration_under_1h": ""
+}
