@@ -18,10 +18,36 @@ function pretty(obj) { return JSON.stringify(obj || {}, null, 2); }
 function num(v, fallback = 0.5) { const n = Number(v); return Number.isFinite(n) ? n : fallback; }
 function textLines(v) { return String(v || '').split(/\n|,|;/).map(x => x.trim()).filter(Boolean); }
 
-function AuthPanel({ onReady }) {
+function LandingPage({ onAuth }) {
+  return <div className="container landing">
+    <div className="landing-copy">
+      <span className="kicker">{BRANCH.kicker}</span>
+      <h1>{BRANCH.product}</h1>
+      <p className="lead">{BRANCH.promise}</p>
+      <div className="landing-actions">
+        <button onClick={() => onAuth('signup')}>Create account</button>
+        <button className="secondary" onClick={() => onAuth('signin')}>Sign in</button>
+      </div>
+    </div>
+    <div className="hero">
+      <LossCard/>
+      <div className="card">
+        <h3>Distribution-ready promise</h3>
+        <p>{BRANCH.distribution}</p>
+        <div className="row">
+          <span className="pill">Supabase auth + RLS</span>
+          <span className="pill">OpenAI-Gemini fallback</span>
+          <span className="pill">heuristic fallback</span>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
+function AuthPanel({ onReady, initialMode = 'signin', onBack }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState('signin');
+  const [mode, setMode] = useState(initialMode);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -44,6 +70,7 @@ function AuthPanel({ onReady }) {
       {error && <p className="loss">{error}</p>}
       <button disabled={busy}>{busy ? 'Working...' : mode === 'signup' ? 'Create account' : 'Sign in'}</button>
       <button className="secondary" type="button" onClick={()=>setMode(mode === 'signup' ? 'signin' : 'signup')}>{mode === 'signup' ? 'Have an account? Sign in' : 'Need access? Create account'}</button>
+      <button className="secondary" type="button" onClick={onBack}>Back to landing</button>
     </form>
   </div>
 }
@@ -219,10 +246,12 @@ function Continuity({ user, org }) {
 
 export default function App() {
   const [session, setSession] = useState(null); const [org,setOrg]=useState(null); const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+  const [authMode, setAuthMode] = useState(null);
   async function boot(){ setLoading(true); setError(''); try{ const {data:{session}}=await supabase.auth.getSession(); setSession(session); if(session?.user){ const orgObj=await ensureOrg(session.user); setOrg(orgObj); } }catch(err){setError(err.message||String(err));} setLoading(false); }
   useEffect(()=>{ boot(); const {data:{subscription}}=supabase.auth.onAuthStateChange(()=>boot()); return ()=>subscription.unsubscribe(); },[]);
   async function signOut(){ await supabase.auth.signOut(); setSession(null); setOrg(null); }
   if(loading) return <div className="container"><div className="card">Loading TraceCrumb...</div></div>;
-  if(!session) return <AuthPanel onReady={boot}/>;
+  if(!session && !authMode) return <LandingPage onAuth={setAuthMode}/>;
+  if(!session) return <AuthPanel onReady={boot} initialMode={authMode} onBack={() => setAuthMode(null)}/>;
   return <div className="container"><Header user={session.user} org={org} signOut={signOut}/>{error&&<div className="card"><p className="loss">{error}</p></div>}<div className="hero"><LossCard/><div className="card"><h3>Distribution-ready promise</h3><p>{BRANCH.distribution}</p><div className="row"><span className="pill">Supabase auth + RLS</span><span className="pill">OpenAI→Gemini fallback</span><span className="pill">heuristic fallback</span></div></div></div>{BRANCH.id==='first60'&&<First60 user={session.user} org={org}/>} {BRANCH.id==='resume'&&<Resume user={session.user} org={org}/>} {BRANCH.id==='handoff'&&<Handoff user={session.user} org={org}/>} {BRANCH.id==='continuity'&&<Continuity user={session.user} org={org}/>}</div>;
 }
